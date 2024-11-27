@@ -1,0 +1,37 @@
+# Maven
+# Build your Java project and run tests with Apache Maven.
+# Add steps that analyze code, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/java
+
+trigger:
+- master
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- task: JfrogCli@1
+  inputs:
+    artifactoryService: 'Artifactory'
+    command: 'jfrog rt config'
+- task: ArtifactoryMaven@2
+  inputs:
+    mavenPomFile: 'pom.xml'
+    goals: 'install'
+    artifactoryResolverService: 'Artifactory'
+    targetResolveReleaseRepo: 'libs-release'
+    targetResolveSnapshotRepo: 'libs-release'
+    artifactoryDeployService: 'Artifactory'
+    targetDeployReleaseRepo: 'libs-release-local'
+    targetDeploySnapshotRepo: 'libs-snapshot-local'
+    collectBuildInfo: true
+    buildName: '$(Build.DefinitionName)'
+    buildNumber: '$(Build.BuildNumber)'
+    includeEnvVars: true
+- task: ArtifactoryProperties@1
+  inputs:
+    command: 'set'
+    artifactoryService: 'Artifactory'
+    setProps: 'qa=test'
+    specSource: 'taskConfiguration'
+
